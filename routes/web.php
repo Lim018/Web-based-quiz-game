@@ -18,6 +18,7 @@ Route::get('/available-quizzes', [QuizController::class, 'availableQuizzes'])->n
 // API Routes for Quiz Gameplay
 Route::prefix('api')->group(function () {
     Route::get('/game/{game}/status', [QuizController::class, 'getGameStatus'])->name('api.game.status');
+    Route::get('/game/{game}/participant/{participant}/question', [QuizController::class, 'getCurrentQuestion'])->name('api.participant.question');
     Route::post('/game/{game}/participant/{participant}/answer', [QuizController::class, 'submitAnswer'])->name('api.submit.answer');
     Route::post('/game/{game}/next-question', [QuizController::class, 'nextQuestion'])->name('api.next.question');
     Route::get('/game/{game}/leaderboard', [QuizController::class, 'getLeaderboard'])->name('api.leaderboard');

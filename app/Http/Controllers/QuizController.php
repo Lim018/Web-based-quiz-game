@@ -77,7 +77,7 @@ class QuizController extends Controller
         ]);
     }
 
-/**
+    /**
      * Join free play mode - select from available quizzes
      */
     public function joinFree(Request $request)
@@ -89,16 +89,15 @@ class QuizController extends Controller
 
         $quiz = Quiz::findOrFail($request->quiz_id);
 
-        // --- LOGIKA BARU: Gunakan atau buat satu sesi game "Free Play" per kuis ---
-        // Ini memastikan semua pemain mode bebas untuk kuis ini masuk ke leaderboard yang sama.
+        // Cari atau buat satu sesi game "Free Play" yang persisten untuk kuis ini.
         $game = QuizGame::firstOrCreate(
             [
                 'quiz_id' => $quiz->id,
                 'mode' => 'free',
             ],
             [
-                'title' => $quiz->title . ' - Free Play',
-                'room_code' => $this->generateRoomCode(), // Tetap generate untuk memenuhi constraint
+                'title' => $quiz->title . ' - Free Play (Leaderboard)',
+                'room_code' => $this->generateRoomCode(),
                 'status' => 'active',
                 'current_stage' => 1,
                 'current_question' => 1,
@@ -106,32 +105,14 @@ class QuizController extends Controller
             ]
         );
 
-        // Cek apakah pemain ini sudah pernah bermain di sesi ini sebelumnya (berdasarkan session_id)
-        $participant = Participant::where('quiz_game_id', $game->id)
-                                  ->where('session_id', session()->getId())
-                                  ->first();
+        // Setiap kali bermain, catat sebagai partisipan baru untuk melacak setiap upaya.
+        // Leaderboard nanti yang akan menyaring untuk skor tertinggi.
+        $participant = Participant::create([
+            'quiz_game_id' => $game->id,
+            'name' => $request->name,
+            'session_id' => session()->getId() . '_' . time() // Tambahkan timestamp untuk unique session per attempt
+        ]);
 
-        if ($participant) {
-            // Jika pemain ingin bermain lagi, reset skor dan jawaban mereka.
-            $participant->answers()->delete(); // Hapus semua jawaban sebelumnya
-            $participant->update([
-                'name' => $request->name, // Perbarui nama jika mereka memasukkan yang baru
-                'total_score' => 0,
-                'stage_1_score' => 0,
-                'stage_2_score' => 0,
-                'stage_3_score' => 0,
-                'is_finished' => false,
-            ]);
-        } else {
-            // Jika ini pemain baru untuk sesi free play ini, buat partisipan baru.
-            $participant = Participant::create([
-                'quiz_game_id' => $game->id,
-                'name' => $request->name,
-                'session_id' => session()->getId()
-            ]);
-        }
-
-        // Arahkan pemain ke halaman permainan
         return redirect()->route('quiz.play', [
             'game' => $game->id, 
             'participant' => $participant->id
@@ -143,8 +124,14 @@ class QuizController extends Controller
      */
     public function play(QuizGame $game, Participant $participant)
     {
-        // Verify participant belongs to this game and session
-        if ($participant->quiz_game_id !== $game->id || $participant->session_id !== session()->getId()) {
+        // Verify participant belongs to this game
+        if ($participant->quiz_game_id !== $game->id) {
+            abort(403, 'Akses tidak diizinkan');
+        }
+
+        // For free mode, allow any participant to play
+        // For realtime mode, check session
+        if ($game->mode === 'realtime' && !str_starts_with($participant->session_id, session()->getId())) {
             abort(403, 'Akses tidak diizinkan');
         }
 
@@ -177,26 +164,52 @@ class QuizController extends Controller
     }
 
     /**
-     * Get current question details
+     * Get current question details for specific participant
      */
-    public function getCurrentQuestion(QuizGame $game): JsonResponse
+    public function getCurrentQuestion(QuizGame $game, Participant $participant): JsonResponse
     {
-        $question = $game->getCurrentQuestion();
+        // For free mode, get question based on participant's progress
+        if ($game->mode === 'free') {
+            $question = $this->getNextQuestionForParticipant($participant);
+        } else {
+            $question = $game->getCurrentQuestion();
+        }
         
         if (!$question) {
-            return response()->json(['error' => 'Tidak ada pertanyaan saat ini'], 404);
+            return response()->json(['error' => 'Tidak ada pertanyaan lagi', 'finished' => true], 404);
         }
 
         return response()->json([
-            'id' => $question->id,
-            'question' => $question->question,
-            'type' => $question->type,
-            'options' => $question->type === 'mcq' ? $question->options : null,
-            'stage' => $question->stage,
-            'question_number' => $question->question_number,
-            'time_limit' => $question->time_limit ?? 30,
-            'points' => $question->points
+            'status' => 'active', // Tambahkan status
+            'stage_info' => $this->getStageInfo($question->stage), // Tambahkan info tahap
+            'question' => $question // Masukkan pertanyaan ke dalam key 'question'
         ]);
+        // return response()->json([
+        //     'id' => $question->id,
+        //     'question' => $question->question,
+        //     'type' => $question->type,
+        //     'options' => $question->type === 'mcq' ? $question->options : null,
+        //     'stage' => $question->stage,
+        //     'question_number' => $question->question_number,
+        //     'time_limit' => $question->time_limit ?? 30,
+        //     'points' => $question->points
+        // ]);
+    }
+
+    /**
+     * Get next unanswered question for participant in free mode
+     */
+    private function getNextQuestionForParticipant(Participant $participant)
+    {
+        $answeredQuestionIds = ParticipantAnswer::where('participant_id', $participant->id)
+                                              ->pluck('question_id')
+                                              ->toArray();
+
+        return Question::where('quiz_id', $participant->quizGame->quiz_id)
+                      ->whereNotIn('id', $answeredQuestionIds)
+                      ->orderBy('stage')
+                      ->orderBy('question_number')
+                      ->first();
     }
 
     /**
@@ -208,11 +221,15 @@ class QuizController extends Controller
             'answer' => 'required|string'
         ]);
 
-        if ($game->status !== 'active') {
+        if ($game->mode === 'realtime' && $game->status !== 'active') {
             return response()->json(['error' => 'Game tidak aktif'], 400);
         }
 
-        $question = $game->getCurrentQuestion();
+        if ($game->mode === 'free') {
+            $question = $this->getNextQuestionForParticipant($participant);
+        } else {
+            $question = $game->getCurrentQuestion();
+        }
         
         if (!$question) {
             return response()->json(['error' => 'Tidak ada pertanyaan saat ini'], 404);
@@ -241,81 +258,160 @@ class QuizController extends Controller
         ]);
 
         // Update participant score
-        $participant->updateScore($game->current_stage, $pointsEarned);
+        $participant->updateScore($question->stage, $pointsEarned);
+
+        // Check if this is the last question for free mode
+        $nextQuestion = $this->getNextQuestionForParticipant($participant);
+        $isLastQuestion = !$nextQuestion;
 
         return response()->json([
             'correct' => $isCorrect,
             'points_earned' => $pointsEarned,
             'total_score' => $participant->fresh()->total_score,
-            'correct_answer' => $question->correct_answer,
-            'explanation' => $question->explanation
+            'is_last_question' => $isLastQuestion,
+            // Remove correct_answer and explanation to prevent cheating
         ]);
     }
 
     /**
      * Move to next question (Admin only for realtime, auto for free play)
      */
-    public function nextQuestion(QuizGame $game): JsonResponse
+    public function nextQuestion(QuizGame $game, Participant $participant = null): JsonResponse
     {
-        if ($game->status !== 'active') {
-            return response()->json(['error' => 'Game tidak aktif'], 400);
-        }
-
-        // Check if current stage has more questions
-        $questionsInStage = $game->quiz->questions()
-                                 ->where('stage', $game->current_stage)
-                                 ->count();
-
-        if ($game->current_question < $questionsInStage) {
-            // Move to next question in current stage
-            $game->current_question++;
-        } else {
-            // Move to next stage or finish game
-            if ($game->current_stage < 3) {
-                $game->current_stage++;
-                $game->current_question = 1;
-            } else {
-                // Finish game
-                $game->status = 'finished';
-                $game->finished_at = now();
-                
-                // Mark all participants as finished
-                $game->participants()->update(['is_finished' => true]);
+        if ($game->mode === 'realtime') {
+            if ($game->status !== 'active') {
+                return response()->json(['error' => 'Game tidak aktif'], 400);
             }
+
+            // Check if current stage has more questions
+            $questionsInStage = $game->quiz->questions()
+                                     ->where('stage', $game->current_stage)
+                                     ->count();
+
+            if ($game->current_question < $questionsInStage) {
+                // Move to next question in current stage
+                $game->current_question++;
+            } else {
+                // Move to next stage or finish game
+                if ($game->current_stage < 3) {
+                    $game->current_stage++;
+                    $game->current_question = 1;
+                } else {
+                    // Finish game
+                    $game->status = 'finished';
+                    $game->finished_at = now();
+                    
+                    // Mark all participants as finished
+                    $game->participants()->update(['is_finished' => true]);
+                }
+            }
+
+            $game->save();
+
+            return response()->json([
+                'status' => $game->status,
+                'current_stage' => $game->current_stage,
+                'current_question' => $game->current_question,
+                'stage_info' => $this->getStageInfo($game->current_stage),
+                'question' => $game->status === 'active' ? $game->getCurrentQuestion() : null
+            ]);
+        } else {
+            // Free mode - just return next question for participant
+            $nextQuestion = $this->getNextQuestionForParticipant($participant);
+            
+            if (!$nextQuestion) {
+                // Mark participant as finished
+                $participant->update(['is_finished' => true]);
+                
+                return response()->json([
+                    'finished' => true,
+                    'status' => 'finished'
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'active',
+                'question' => [
+                    'id' => $nextQuestion->id,
+                    'question' => $nextQuestion->question,
+                    'type' => $nextQuestion->type,
+                    'options' => $nextQuestion->type === 'mcq' ? $nextQuestion->options : null,
+                    'stage' => $nextQuestion->stage,
+                    'question_number' => $nextQuestion->question_number,
+                    'time_limit' => $nextQuestion->time_limit ?? 30,
+                    'points' => $nextQuestion->points
+                ],
+                'stage_info' => $this->getStageInfo($nextQuestion->stage)
+            ]);
         }
-
-        $game->save();
-
-        return response()->json([
-            'status' => $game->status,
-            'current_stage' => $game->current_stage,
-            'current_question' => $game->current_question,
-            'stage_info' => $this->getStageInfo($game->current_stage),
-            'question' => $game->status === 'active' ? $game->getCurrentQuestion() : null
-        ]);
     }
 
     /**
      * Get leaderboard for current game
      */
-    public function getLeaderboard(QuizGame $game): JsonResponse
+    public function getLeaderboard(QuizGame $game)
     {
-        $leaderboard = $game->getLeaderboard()->map(function ($participant, $index) {
-            return [
-                'rank' => $index + 1,
-                'name' => $participant->name,
-                'total_score' => $participant->total_score,
-                'stage_1_score' => $participant->stage_1_score,
-                'stage_2_score' => $participant->stage_2_score,
-                'stage_3_score' => $participant->stage_3_score,
-                'is_finished' => $participant->is_finished
-            ];
-        });
+        if ($game->mode === 'free') {
+            // For free play mode, group participants by name and take the highest score
+            $leaderboard = $game->participants
+                ->groupBy('name')
+                ->map(function ($group) {
+                    // Return the participant with the highest score for each name
+                    return $group->sortByDesc('total_score')->first();
+                })
+                ->sortByDesc('total_score')
+                ->values() // Reset keys for clean array indexing
+                ->map(function ($participant, $index) {
+                    return [
+                        'rank' => $index + 1,
+                        'name' => $participant->name,
+                        'total_score' => $participant->total_score
+                    ];
+                });
+        } else {
+            // For real-time mode, show all participants as usual
+            $participants = $game->participants()
+                ->orderBy('total_score', 'desc')
+                ->orderBy('updated_at', 'asc')
+                ->get();
+                
+            $leaderboard = $participants->map(function ($participant, $index) {
+                return [
+                    'rank' => $index + 1,
+                    'name' => $participant->name,
+                    'total_score' => $participant->total_score
+                ];
+            });
+        }
 
         return response()->json([
-            'leaderboard' => $leaderboard,
-            'game_status' => $game->status,
-            'total_participants' => $game->participants()->count()
+            'leaderboard' => $leaderboard
+        ]);
+    }
+
+    /**
+     * Restart quiz for free mode
+     */
+    public function restartFreeMode(Request $request, QuizGame $game)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255'
+        ]);
+
+        if ($game->mode !== 'free') {
+            return response()->json(['error' => 'Hanya bisa restart di mode bebas'], 400);
+        }
+
+        // Create new participant for new attempt
+        $participant = Participant::create([
+            'quiz_game_id' => $game->id,
+            'name' => $request->name,
+            'session_id' => session()->getId() . '_' . time()
+        ]);
+
+        return response()->json([
+            'participant_id' => $participant->id,
+            'redirect_url' => route('quiz.play', ['game' => $game->id, 'participant' => $participant->id])
         ]);
     }
 

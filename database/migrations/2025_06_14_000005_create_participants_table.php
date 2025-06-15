@@ -24,7 +24,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['quiz_game_id', 'total_score']);
-            $table->unique(['quiz_game_id', 'session_id']);
+            // $table->unique(['quiz_game_id', 'session_id']);
         });
     }
 
