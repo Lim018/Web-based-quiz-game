@@ -2,66 +2,61 @@
 @section('title', 'Statistik Game')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Statistik: {{ $game->title }}</h2>
-    <a href="{{ route('admin.quiz.results', $game->quiz_id) }}" class="btn btn-secondary">Kembali ke Hasil Kuis</a>
-</div>
-<p class="text-muted">Selesai pada: {{ $game->finished_at->format('d M Y, H:i') }}</p>
-
-<h4 class="mt-4">Leaderboard Akhir</h4>
-<div class="card mb-4">
-    <div class="card-body">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Peringkat</th>
-                    <th>Nama Peserta</th>
-                    <th>Skor Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($participants as $participant)
-                    <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        <td>{{ $participant->name }}</td>
-                        <td>{{ $participant->total_score }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+<div class="sm:flex sm:items-center sm:justify-between">
+    <div>
+        <h1 class="text-xl font-semibold text-gray-900">Statistik Game: {{ $game->title }}</h1>
+        <p class="mt-1 text-sm text-gray-500">Selesai pada: {{ $game->finished_at->format('d M Y, H:i') }}</p>
     </div>
+    <a href="{{ route('admin.quiz.results', $game->quiz_id) }}" class="mt-3 sm:mt-0 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Kembali</a>
 </div>
 
-<h4 class="mt-4">Statistik Per Pertanyaan</h4>
-<div class="card">
-    <div class="card-body">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>No.</th>
-                    <th>Pertanyaan</th>
-                    <th>Tahap</th>
-                    <th>Akurasi Jawaban</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($questionStats as $stat)
-                    <tr>
-                        <td>{{ $stat['question_number'] }}</td>
-                        <td>{{ $stat['question'] }}</td>
-                        <td>{{ $stat['stage'] }}</td>
-                        <td>
-                            <div class="progress">
-                                <div class="progress-bar" role="progressbar" style="width: {{ $stat['accuracy'] }}%;" aria-valuenow="{{ $stat['accuracy'] }}" aria-valuemin="0" aria-valuemax="100">
-                                    {{ $stat['accuracy'] }}%
-                                </div>
-                            </div>
-                            <small class="text-muted">({{ $stat['correct_answers'] }} dari {{ $stat['total_answers'] }} jawaban benar)</small>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+<h2 class="mt-8 text-lg font-medium text-gray-900">Leaderboard Akhir</h2>
+<div class="mt-4 overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+    <table class="min-w-full divide-y divide-gray-300">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Peringkat</th>
+                <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Nama</th>
+                <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Skor</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white">
+            @foreach($participants as $participant)
+            <tr>
+                <td class="py-4 pl-4 pr-3 text-sm font-medium sm:pl-6 @if($loop->first) text-yellow-500 @endif">{{ $loop->iteration }}</td>
+                <td class="px-3 py-4 text-sm font-medium text-gray-900">{{ $participant->name }}</td>
+                <td class="px-3 py-4 text-sm text-gray-500">{{ $participant->total_score }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
+
+<h2 class="mt-8 text-lg font-medium text-gray-900">Statistik Per Pertanyaan</h2>
+<div class="mt-4 overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+    <table class="min-w-full divide-y divide-gray-300">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Pertanyaan</th>
+                <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Akurasi Jawaban</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white">
+            @foreach($questionStats as $stat)
+            <tr>
+                <td class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                    <p>{{ $stat['question'] }}</p>
+                    <p class="text-xs text-gray-500">Tahap {{ $stat['stage'] }}, No. {{ $stat['question_number'] }}</p>
+                </td>
+                <td class="px-3 py-4 text-sm text-gray-500">
+                    <div class="w-full bg-gray-200 rounded-full">
+                        <div class="bg-blue-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full" style="width: {{ $stat['accuracy'] }}%"> {{ $stat['accuracy'] }}% </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">({{ $stat['correct_answers'] }} / {{ $stat['total_answers'] }} benar)</p>
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
 </div>
 @endsection

@@ -2,40 +2,21 @@
 @section('title', 'Bagikan Kuis')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card text-center">
-            <div class="card-header">
-                <h4>Bagikan Kuis untuk Mode Bebas</h4>
-            </div>
-            <div class="card-body">
-                <h5 class="card-title">{{ $quiz->title }}</h5>
-                <p>Gunakan link di bawah ini untuk mengundang orang bermain kuis ini kapan saja.</p>
-                <div class="input-group mb-3">
-                    <input type="text" id="shareableLink" class="form-control" value="{{ $shareUrl }}" readonly>
-                    <button class="btn btn-outline-secondary" type="button" id="copyBtn">Salin</button>
+<div class="mx-auto max-w-lg">
+    <div class="bg-white shadow sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6 text-center">
+            <h3 class="text-lg font-medium leading-6 text-gray-900">Bagikan Kuis untuk Mode Bebas</h3>
+            <p class="mt-2 max-w-xl text-sm text-gray-500 mx-auto">Gunakan link di bawah ini untuk mengundang orang bermain kuis '{{ $quiz->title }}' kapan saja.</p>
+            <div class="mt-5" x-data="{ copied: false }">
+                <div class="flex rounded-md shadow-sm">
+                    <input type="text" id="shareableLink" class="block w-full flex-1 rounded-none rounded-l-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" value="{{ $shareUrl }}" readonly>
+                    <button @click="navigator.clipboard.writeText('{{ $shareUrl }}'); copied = true; setTimeout(() => copied = false, 2000)" type="button" class="relative -ml-px inline-flex items-center space-x-2 rounded-r-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        <span>Salin</span>
+                    </button>
                 </div>
-                <div id="copy-success" class="text-success d-none">Link berhasil disalin!</div>
+                <p x-show="copied" x-transition class="mt-2 text-sm text-green-600">Link berhasil disalin!</p>
             </div>
         </div>
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-document.getElementById('copyBtn').addEventListener('click', function() {
-    var copyText = document.getElementById('shareableLink');
-    copyText.select();
-    copyText.setSelectionRange(0, 99999); // For mobile devices
-    
-    navigator.clipboard.writeText(copyText.value).then(function() {
-        var successMessage = document.getElementById('copy-success');
-        successMessage.classList.remove('d-none');
-        setTimeout(function() {
-            successMessage.classList.add('d-none');
-        }, 2000);
-    });
-});
-</script>
-@endpush

@@ -77,7 +77,7 @@ class QuizController extends Controller
         ]);
     }
 
-    /**
+/**
      * Join free play mode - select from available quizzes
      */
     public function joinFree(Request $request)
@@ -89,24 +89,49 @@ class QuizController extends Controller
 
         $quiz = Quiz::findOrFail($request->quiz_id);
 
-        // Create free play game session
-        $game = QuizGame::create([
-            'quiz_id' => $quiz->id,
-            'title' => $quiz->title . ' - Free Play',
-            'room_code' => $this->generateRoomCode(),
-            'mode' => 'free',
-            'status' => 'active',
-            'current_stage' => 1,
-            'current_question' => 1,
-            'started_at' => now()
-        ]);
+        // --- LOGIKA BARU: Gunakan atau buat satu sesi game "Free Play" per kuis ---
+        // Ini memastikan semua pemain mode bebas untuk kuis ini masuk ke leaderboard yang sama.
+        $game = QuizGame::firstOrCreate(
+            [
+                'quiz_id' => $quiz->id,
+                'mode' => 'free',
+            ],
+            [
+                'title' => $quiz->title . ' - Free Play',
+                'room_code' => $this->generateRoomCode(), // Tetap generate untuk memenuhi constraint
+                'status' => 'active',
+                'current_stage' => 1,
+                'current_question' => 1,
+                'started_at' => now(),
+            ]
+        );
 
-        $participant = Participant::create([
-            'quiz_game_id' => $game->id,
-            'name' => $request->name,
-            'session_id' => session()->getId()
-        ]);
+        // Cek apakah pemain ini sudah pernah bermain di sesi ini sebelumnya (berdasarkan session_id)
+        $participant = Participant::where('quiz_game_id', $game->id)
+                                  ->where('session_id', session()->getId())
+                                  ->first();
 
+        if ($participant) {
+            // Jika pemain ingin bermain lagi, reset skor dan jawaban mereka.
+            $participant->answers()->delete(); // Hapus semua jawaban sebelumnya
+            $participant->update([
+                'name' => $request->name, // Perbarui nama jika mereka memasukkan yang baru
+                'total_score' => 0,
+                'stage_1_score' => 0,
+                'stage_2_score' => 0,
+                'stage_3_score' => 0,
+                'is_finished' => false,
+            ]);
+        } else {
+            // Jika ini pemain baru untuk sesi free play ini, buat partisipan baru.
+            $participant = Participant::create([
+                'quiz_game_id' => $game->id,
+                'name' => $request->name,
+                'session_id' => session()->getId()
+            ]);
+        }
+
+        // Arahkan pemain ke halaman permainan
         return redirect()->route('quiz.play', [
             'game' => $game->id, 
             'participant' => $participant->id

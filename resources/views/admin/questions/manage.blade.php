@@ -2,12 +2,13 @@
 @section('title', 'Kelola Pertanyaan')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Kelola Pertanyaan untuk: {{ $quiz->title }}</h2>
-    <a href="{{ route('admin.quizzes.index') }}" class="btn btn-secondary">Kembali ke Daftar Kuis</a>
+<div class="sm:flex sm:items-center sm:justify-between">
+    <div>
+        <h1 class="text-xl font-semibold text-gray-900">Kelola Pertanyaan</h1>
+        <p class="mt-1 text-sm text-gray-500">Kuis: {{ $quiz->title }}</p>
+    </div>
+    <a href="{{ route('admin.quizzes.index') }}" class="mt-3 sm:mt-0 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Kembali ke Daftar Kuis</a>
 </div>
-
-<p>Setiap tahap harus memiliki minimal 1 soal dan maksimal 20 soal.</p>
 
 @php
 $stageInfo = [
@@ -17,106 +18,110 @@ $stageInfo = [
 ];
 @endphp
 
-<div class="accordion" id="stagesAccordion">
+<div class="mt-6 space-y-6" x-data="{ open_stage: 1 }">
 @foreach($stageInfo as $stageNumber => $info)
-    <div class="accordion-item">
-        <h2 class="accordion-header" id="heading{{$stageNumber}}">
-            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{$stageNumber}}" aria-expanded="true" aria-controls="collapse{{$stageNumber}}">
-                {{ $info['name'] }} ({{ $questionCounts[$stageNumber] ?? 0 }} Soal)
-            </button>
-        </h2>
-        <div id="collapse{{$stageNumber}}" class="accordion-collapse collapse show" aria-labelledby="heading{{$stageNumber}}" data-bs-parent="#stagesAccordion">
-            <div class="accordion-body">
+    <div class="bg-white shadow sm:rounded-lg">
+        <div @click="open_stage = open_stage === {{ $stageNumber }} ? null : {{ $stageNumber }} " class="px-4 py-5 sm:px-6 cursor-pointer border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-medium leading-6 text-gray-900">{{ $info['name'] }}</h3>
+                <span class="ml-3 inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">{{ $questionCounts[$stageNumber] ?? 0 }} / 20 Soal</span>
+            </div>
+        </div>
+        <div x-show="open_stage === {{ $stageNumber }}" x-collapse class="px-4 py-5 sm:p-6">
+            <ul role="list" class="divide-y divide-gray-200">
                 @forelse($questions[$stageNumber] ?? [] as $question)
-                    <div class="card mb-2">
-                        <div class="card-body d-flex justify-content-between">
-                            <div>
-                                <strong>{{ $loop->iteration }}.</strong> {{ $question->question }} <br>
-                                <small class="text-muted">Jawaban: {{ $question->correct_answer }} | Poin: {{ $question->points }}</small>
-                            </div>
-                            <div>
-                                <form action="{{ route('admin.question.delete', $question) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus soal ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
-                                </form>
-                            </div>
-                        </div>
+                <li class="py-4 flex justify-between items-center">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">{{ $loop->iteration }}. {{ $question->question }}</p>
+                        <p class="text-sm text-gray-500">Jawaban: {{ $question->correct_answer }} | Poin: {{ $question->points }}</p>
                     </div>
+                    <div>
+                        <form action="{{ route('admin.question.delete', $question) }}" method="POST" onsubmit="return confirm('Yakin hapus soal ini?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="rounded-md bg-white text-sm font-medium text-red-600 hover:text-red-500">Hapus</button>
+                        </form>
+                    </div>
+                </li>
                 @empty
-                    <p>Belum ada soal untuk tahap ini.</p>
+                <li class="py-4 text-sm text-gray-500">Belum ada soal untuk tahap ini.</li>
                 @endforelse
+            </ul>
 
-                <hr>
-
-                @if(($questionCounts[$stageNumber] ?? 0) < 20)
-                <h5>Tambah Soal Baru untuk Tahap {{ $stageNumber }}</h5>
-                <form action="{{ route('admin.quiz.questions.add', $quiz) }}" method="POST">
+            @if(($questionCounts[$stageNumber] ?? 0) < 20)
+             <div class="mt-6 border-t border-gray-200 pt-6">
+                <h4 class="text-md font-medium text-gray-800">Tambah Soal Baru</h4>
+                 <form action="{{ route('admin.quiz.questions.add', $quiz) }}" method="POST" class="mt-4 space-y-4">
                     @csrf
                     <input type="hidden" name="stage" value="{{ $stageNumber }}">
                     <input type="hidden" name="type" value="{{ $info['type'] }}">
 
-                    <div class="mb-3">
-                        <label class="form-label">Teks Pertanyaan</label>
-                        <textarea name="question" class="form-control" required></textarea>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Teks Pertanyaan</label>
+                        <textarea name="question" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
                     </div>
 
                     @if($info['type'] === 'mcq')
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Opsi A</label>
-                                <input type="text" name="options[]" class="form-control" required>
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Opsi A</label>
+                                <input type="text" name="options[]" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Opsi B</label>
-                                <input type="text" name="options[]" class="form-control" required>
+                             <div>
+                                <label class="block text-sm font-medium text-gray-700">Opsi B</label>
+                                <input type="text" name="options[]" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Opsi C</label>
-                                <input type="text" name="options[]" class="form-control" required>
+                             <div>
+                                <label class="block text-sm font-medium text-gray-700">Opsi C</label>
+                                <input type="text" name="options[]" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Opsi D</label>
-                                <input type="text" name="options[]" class="form-control" required>
+                             <div>
+                                <label class="block text-sm font-medium text-gray-700">Opsi D</label>
+                                <input type="text" name="options[]" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Jawaban Benar (Tulis ulang teks opsi yang benar)</label>
-                            <input type="text" name="correct_answer" class="form-control" required>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Jawaban Benar (Tulis ulang teks opsi yang benar)</label>
+                            <input type="text" name="correct_answer" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                         </div>
                     @elseif($info['type'] === 'true_false')
-                        <div class="mb-3">
-                            <label class="form-label">Jawaban Benar</label>
-                            <select name="correct_answer" class="form-select" required>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Jawaban Benar</label>
+                            <select name="correct_answer" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                                 <option value="True">Benar</option>
                                 <option value="False">Salah</option>
                             </select>
                         </div>
-                    @else {{-- Short Answer --}}
-                        <div class="mb-3">
-                            <label class="form-label">Jawaban Benar</label>
-                            <input type="text" name="correct_answer" class="form-control" required>
+                    @else
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Jawaban Benar</label>
+                            <input type="text" name="correct_answer" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                         </div>
                     @endif
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Penjelasan (Opsional)</label>
-                            <input type="text" name="explanation" class="form-control">
+                    
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Poin</label>
+                            <input type="number" name="points" value="10" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Poin</label>
-                            <input type="number" name="points" class="form-control" value="10" required>
+                        <div>
+                             <label class="block text-sm font-medium text-gray-700">Penjelasan (Opsional)</label>
+                            <input type="text" name="explanation" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Tambah Soal</button>
-                </form>
-                @else
-                <p class="text-success">Jumlah soal untuk tahap ini sudah maksimal (20 soal).</p>
-                @endif
-            </div>
+                    <div class="text-right">
+                        <button type="submit" class="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700">Tambah Soal</button>
+                    </div>
+                 </form>
+             </div>
+             @else
+              <p class="mt-4 text-sm text-green-600">Jumlah soal untuk tahap ini sudah maksimal.</p>
+             @endif
         </div>
     </div>
 @endforeach
 </div>
 @endsection
+@push('scripts')
+<script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+@endpush
