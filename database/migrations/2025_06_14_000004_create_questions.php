@@ -13,13 +13,19 @@ return new class extends Migration
     {
        Schema::create('questions', function (Blueprint $table) {
             $table->id();
-            $table->integer('stage'); // 1=MCQ, 2=Fill, 3=True/False
-            $table->integer('question_number'); // 1-20 for each stage
+            $table->foreignId('quiz_id')->constrained()->onDelete('cascade');
+            $table->tinyInteger('stage'); // 1=MCQ, 2=Short Answer, 3=True/False
+            $table->tinyInteger('question_number');
             $table->text('question');
-            $table->json('options')->nullable(); // For MCQ and True/False
+            $table->enum('type', ['mcq', 'short_answer', 'true_false']);
+            $table->json('options')->nullable(); // For MCQ options
             $table->string('correct_answer');
+            $table->text('explanation')->nullable();
             $table->integer('points')->default(10);
+            $table->integer('time_limit')->nullable(); // Override quiz default if needed
             $table->timestamps();
+
+            $table->index(['quiz_id', 'stage', 'question_number']);
         });
     }
 

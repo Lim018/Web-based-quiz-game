@@ -20,6 +20,9 @@ return new class extends Migration
             $table->integer('points_earned')->default(0);
             $table->timestamp('answered_at');
             $table->timestamps();
+
+            $table->unique(['participant_id', 'question_id']);
+            $table->index(['question_id', 'is_correct']);
         });
     }
 

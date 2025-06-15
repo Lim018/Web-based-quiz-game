@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('participants', function (Blueprint $table) {
+        Schema::create('participants', function (Blueprint $table) {
             $table->id();
             $table->foreignId('quiz_game_id')->constrained()->onDelete('cascade');
             $table->string('name');
@@ -22,6 +22,9 @@ return new class extends Migration
             $table->integer('stage_3_score')->default(0);
             $table->boolean('is_finished')->default(false);
             $table->timestamps();
+
+            $table->index(['quiz_game_id', 'total_score']);
+            $table->unique(['quiz_game_id', 'session_id']);
         });
     }
 
