@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Admin;
+use App\Models\User;
 use App\Models\Quiz;
 use App\Models\Question;
 use Illuminate\Support\Facades\Hash;
@@ -12,110 +12,105 @@ class QuizSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     *
+     * @return void
      */
-    public function run(): void
+    public function run()
     {
-        $admin = Admin::firstOrCreate(
-            ['email' => 'admin@contoh.com'],
+        // 1. Create a Test User
+        $user = User::firstOrCreate(
+            ['email' => 'test@example.com'],
             [
-                'name' => 'Admin Contoh',
+                'name' => 'Test User',
                 'password' => Hash::make('password'),
             ]
         );
 
-        $quiz = Quiz::create([
-            'title' => 'Kuis Pengetahuan Umum',
-            'description' => 'Uji wawasanmu dengan berbagai pertanyaan menarik dari seluruh dunia.',
-            'created_by' => $admin->id,
-            'is_active' => true,
+        // 2. Create a Realtime Quiz
+        $realtimeQuiz = Quiz::create([
+            'user_id' => $user->id,
+            'title' => 'Kuis Sejarah Indonesia (Realtime)',
+            'mode' => 'realtime',
+            'room_code' => '123456', // Static room code for easy testing
+            'is_active' => false,
         ]);
 
-        // TAHAP 1: Pilihan Ganda (Multiple Choice Questions)
-        $mcq_questions = [
-            [
-                'question' => 'Apa ibu kota dari negara Australia?',
-                // --- PERBAIKAN DI SINI: Hapus json_encode ---
-                'options' => ['Sydney', 'Melbourne', 'Canberra', 'Perth'],
-                'correct_answer' => 'Canberra',
-            ],
-            [
-                'question' => 'Siapakah penemu bola lampu?',
-                'options' => ['Albert Einstein', 'Thomas Edison', 'Isaac Newton', 'Nikola Tesla'],
-                'correct_answer' => 'Thomas Edison',
-            ],
-            [
-                'question' => 'Planet mana yang dikenal sebagai "Planet Merah"?',
-                'options' => ['Venus', 'Mars', 'Jupiter', 'Saturnus'],
-                'correct_answer' => 'Mars',
-            ],
-        ];
+        // Questions for Realtime Quiz
+        Question::create([
+            'quiz_id' => $realtimeQuiz->id,
+            'stage' => 1,
+            'type' => 'multiple_choice',
+            'question' => 'Siapakah presiden pertama Indonesia?',
+            'options' => ['A' => 'Soekarno', 'B' => 'Soeharto', 'C' => 'B.J. Habibie', 'D' => 'Joko Widodo'],
+            'correct_answer' => 'A',
+            'points' => 10,
+        ]);
 
-        foreach ($mcq_questions as $index => $q) {
-            Question::create([
-                'quiz_id' => $quiz->id,
-                'stage' => 1,
-                'question_number' => $index + 1,
-                'question' => $q['question'],
-                'type' => 'mcq',
-                'options' => $q['options'], // Laravel akan otomatis meng-encode array ini
-                'correct_answer' => $q['correct_answer'],
-                'points' => 10,
-            ]);
-        }
+        Question::create([
+            'quiz_id' => $realtimeQuiz->id,
+            'stage' => 2,
+            'type' => 'short_answer',
+            'question' => 'Ibu kota Indonesia adalah...',
+            'correct_answer' => 'Jakarta',
+            'points' => 10,
+        ]);
 
-        // TAHAP 2 & 3 tetap sama dan tidak perlu diubah...
-        $short_answer_questions = [
-            [
-                'question' => 'Bahan utama dalam pembuatan cokelat adalah biji dari pohon...',
-                'correct_answer' => 'Kakao',
-            ],
-            [
-                'question' => 'Samudra terbesar di dunia adalah samudra...',
-                'correct_answer' => 'Pasifik',
-            ],
-            [
-                'question' => 'Negara dengan julukan "Negeri Matahari Terbit" adalah...',
-                'correct_answer' => 'Jepang',
-            ],
-        ];
+        Question::create([
+            'quiz_id' => $realtimeQuiz->id,
+            'stage' => 3,
+            'type' => 'true_false',
+            'question' => 'Monas terletak di Surabaya.',
+            'correct_answer' => 'false',
+            'points' => 10,
+        ]);
 
-        foreach ($short_answer_questions as $index => $q) {
-            Question::create([
-                'quiz_id' => $quiz->id,
-                'stage' => 2,
-                'question_number' => $index + 1,
-                'question' => $q['question'],
-                'type' => 'short_answer',
-                'correct_answer' => $q['correct_answer'],
-                'points' => 15,
-            ]);
-        }
+
+        // 3. Create a "Bebas" Mode Quiz
+        $bebasQuiz = Quiz::create([
+            'user_id' => $user->id,
+            'title' => 'Kuis Pengetahuan Umum (Bebas)',
+            'mode' => 'bebas',
+            'room_code' => null,
+            'is_active' => true, // Bebas mode is always active
+        ]);
+
+        // Questions for "Bebas" Quiz
+        Question::create([
+            'quiz_id' => $bebasQuiz->id,
+            'stage' => 1,
+            'type' => 'multiple_choice',
+            'question' => 'Planet terdekat dari Matahari adalah?',
+            'options' => ['A' => 'Venus', 'B' => 'Mars', 'C' => 'Merkurius', 'D' => 'Bumi'],
+            'correct_answer' => 'C',
+            'points' => 10,
+        ]);
         
-        $true_false_questions = [
-            [
-                'question' => 'Benar atau Salah: Manusia memiliki 5 indra.',
-                'correct_answer' => 'True',
-            ],
-            [
-                'question' => 'Benar atau Salah: Air mendidih pada suhu 90 derajat Celsius di tekanan atmosfer standar.',
-                'correct_answer' => 'False',
-            ],
-            [
-                'question' => 'Benar atau Salah: Bunglon mengubah warna kulitnya untuk bersembunyi dari predator.',
-                'correct_answer' => 'True',
-            ],
-        ];
-        
-        foreach ($true_false_questions as $index => $q) {
-            Question::create([
-                'quiz_id' => $quiz->id,
-                'stage' => 3,
-                'question_number' => $index + 1,
-                'question' => $q['question'],
-                'type' => 'true_false',
-                'correct_answer' => $q['correct_answer'],
-                'points' => 5,
-            ]);
-        }
+        Question::create([
+            'quiz_id' => $bebasQuiz->id,
+            'stage' => 1,
+            'type' => 'multiple_choice',
+            'question' => 'Formula kimia untuk air adalah?',
+            'options' => ['A' => 'O2', 'B' => 'H2O', 'C' => 'CO2', 'D' => 'NaCl'],
+            'correct_answer' => 'B',
+            'points' => 10,
+        ]);
+
+        Question::create([
+            'quiz_id' => $bebasQuiz->id,
+            'stage' => 2,
+            'type' => 'short_answer',
+            'question' => 'Negara dengan menara Eiffel adalah...',
+            'correct_answer' => 'Prancis',
+            'points' => 10,
+        ]);
+
+        Question::create([
+            'quiz_id' => $bebasQuiz->id,
+            'stage' => 3,
+            'type' => 'true_false',
+            'question' => 'Matahari terbit dari barat.',
+            'correct_answer' => 'false',
+            'points' => 10,
+        ]);
     }
 }

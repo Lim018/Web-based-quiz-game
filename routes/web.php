@@ -1,69 +1,38 @@
 <?php
-
+// routes/web.php
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\QuizController;
-use App\Http\Controllers\AdminController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\AdminRegisterController;
+use App\Http\Controllers\QuizController;
+use App\Http\Controllers\GameController;
 
-// Public Quiz Routes
-Route::get('/', [QuizController::class, 'index'])->name('quiz.index');
+// Public routes
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/pilih-quiz', [HomeController::class, 'pilihQuiz'])->name('pilih-quiz');
 
-// Participant Routes
-Route::post('/join-realtime', [QuizController::class, 'joinRealtime'])->name('quiz.join-realtime');
-Route::post('/join-free', [QuizController::class, 'joinFree'])->name('quiz.join-free');
-Route::get('/game/{game}/participant/{participant}', [QuizController::class, 'play'])->name('quiz.play');
-Route::get('/available-quizzes', [QuizController::class, 'availableQuizzes'])->name('quiz.available');
+// Auth routes
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// API Routes for Quiz Gameplay
-Route::prefix('api')->group(function () {
-    Route::get('/game/{game}/status', [QuizController::class, 'getGameStatus'])->name('api.game.status');
-    Route::get('/game/{game}/participant/{participant}/question', [QuizController::class, 'getCurrentQuestion'])->name('api.participant.question');
-    Route::post('/game/{game}/participant/{participant}/answer', [QuizController::class, 'submitAnswer'])->name('api.submit.answer');
-    Route::post('/game/{game}/next-question', [QuizController::class, 'nextQuestion'])->name('api.next.question');
-    Route::get('/game/{game}/leaderboard', [QuizController::class, 'getLeaderboard'])->name('api.leaderboard');
-    Route::get('/game/{game}/current-question', [QuizController::class, 'getCurrentQuestion'])->name('api.current.question');
-});
+// Game routes (public)
+Route::post('/join-realtime', [GameController::class, 'joinRealtime'])->name('game.join-realtime');
+Route::post('/join-bebas/{quiz}', [GameController::class, 'joinBebas'])->name('game.join-bebas');
+Route::get('/waiting-room/{quiz}', [GameController::class, 'waitingRoom'])->name('game.waiting-room');
+Route::get('/play/{quiz}', [GameController::class, 'play'])->name('game.play');
+Route::post('/submit-answer/{quiz}', [GameController::class, 'submitAnswer'])->name('game.submit-answer');
+Route::get('/finish/{quiz}', [GameController::class, 'finish'])->name('game.finish');
 
-// Admin Authentication
-Route::get('/admin/login', [AuthController::class, 'showLogin'])->name('admin.login');
-Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login.post');
-Route::post('/admin/logout', [AuthController::class, 'logout'])->name('admin.logout');
-
-// Admin Registration
-Route::get('/admin/register', [AdminRegisterController::class, 'showRegistrationForm'])->name('admin.register');
-Route::post('/admin/register', [AdminRegisterController::class, 'register'])->name('admin.register.post');
-
-// Admin Routes (Protected)
-Route::prefix('admin')->name('admin.')->middleware('auth:admin')->group(function () {
-    // Dashboard
-    Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
-    
-    // Quiz Management
-    Route::get('/quizzes', [AdminController::class, 'listQuizzes'])->name('quizzes.index');
-    Route::get('/quiz/create', [AdminController::class, 'createQuizForm'])->name('quiz.create');
-    Route::post('/quiz/create', [AdminController::class, 'storeQuiz'])->name('quiz.store');
-    Route::get('/quiz/{quiz}/edit', [AdminController::class, 'editQuiz'])->name('quiz.edit');
-    Route::put('/quiz/{quiz}', [AdminController::class, 'updateQuiz'])->name('quiz.update');
-    Route::delete('/quiz/{quiz}', [AdminController::class, 'deleteQuiz'])->name('quiz.delete');
-    
-    // Game Session Management
-    Route::get('/quiz/{quiz}/play', [AdminController::class, 'startRealtimeSession'])->name('quiz.play');
-    Route::post('/quiz/{quiz}/start-session', [AdminController::class, 'createGameSession'])->name('quiz.create-session');
-    Route::get('/game/{game}', [AdminController::class, 'showGameSession'])->name('game.show');
-    Route::post('/game/{game}/start', [AdminController::class, 'startGame'])->name('game.start');
-    Route::post('/game/{game}/end', [AdminController::class, 'endGame'])->name('game.end');
-    
-    // Question Management
-    Route::get('/quiz/{quiz}/questions', [AdminController::class, 'manageQuestions'])->name('quiz.questions');
-    Route::post('/quiz/{quiz}/questions', [AdminController::class, 'addQuestion'])->name('quiz.questions.add');
-    Route::put('/question/{question}', [AdminController::class, 'updateQuestion'])->name('question.update');
-    Route::delete('/question/{question}', [AdminController::class, 'deleteQuestion'])->name('question.delete');
-    
-    // Results and Statistics
-    Route::get('/quiz/{quiz}/results', [AdminController::class, 'viewResults'])->name('quiz.results');
-    Route::get('/game/{game}/statistics', [AdminController::class, 'gameStatistics'])->name('game.statistics');
-    
-    // Share Quiz
-    Route::get('/quiz/{quiz}/share', [AdminController::class, 'shareQuiz'])->name('quiz.share');
+// Protected routes
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [QuizController::class, 'dashboard'])->name('dashboard');
+    Route::get('/select-mode', [QuizController::class, 'selectMode'])->name('quiz.select-mode');
+    Route::post('/create-quiz', [QuizController::class, 'createQuiz'])->name('quiz.create');
+    Route::get('/create-questions/{quiz}', [QuizController::class, 'createQuestions'])->name('quiz.create-questions');
+    Route::post('/store-questions/{quiz}', [QuizController::class, 'storeQuestions'])->name('quiz.store-questions');
+    Route::post('/start-realtime/{quiz}', [QuizController::class, 'startRealtime'])->name('quiz.start-realtime');
+    Route::get('/room-status/{quiz}', [QuizController::class, 'roomStatus'])->name('quiz.room-status');
+    Route::get('/leaderboard/{quiz}', [QuizController::class, 'leaderboard'])->name('quiz.leaderboard');
 });

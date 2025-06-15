@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('quizzes', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('title');
-            $table->text('description')->nullable();
-            $table->integer('time_per_question')->default(30); // seconds
-            $table->foreignId('created_by')->constrained('admins')->onDelete('cascade');
-            $table->boolean('is_active')->default(true);
+            $table->enum('mode', ['realtime', 'bebas']);
+            $table->string('room_code', 6)->nullable()->unique();
+            $table->boolean('is_active')->default(false);
             $table->timestamps();
         });
     }
