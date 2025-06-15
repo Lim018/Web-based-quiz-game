@@ -2,59 +2,59 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    /**
-     * Show admin login form
-     */
-    public function showLogin()
+    public function showLoginForm()
     {
-        if (Auth::guard('admin')->check()) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        return view('admin.auth.login');
+        return view('auth.login');
     }
 
-    /**
-     * Handle admin login
-     */
     public function login(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
-            'password' => 'required|string'
+            'password' => 'required',
         ]);
 
-        $credentials = $request->only('email', 'password');
-
-        if (Auth::guard('admin')->attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-
-            return redirect()->intended(route('admin.dashboard'))
-                           ->with('success', 'Selamat datang kembali!');
+        if (Auth::attempt($request->only('email', 'password'))) {
+            return redirect()->route('dashboard');
         }
 
-        throw ValidationException::withMessages([
-            'email' => 'Email atau password salah.',
-        ]);
+        return back()->withErrors(['email' => 'Invalid credentials']);
     }
 
-    /**
-     * Handle admin logout
-     */
-    public function logout(Request $request)
+    public function showRegisterForm()
     {
-        Auth::guard('admin')->logout();
+        return view('auth.register');
+    }
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+    public function register(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
 
-        return redirect()->route('admin.login')
-                        ->with('success', 'Anda telah berhasil logout.');
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        Auth::login($user);
+
+        return redirect()->route('dashboard');
+    }
+
+    public function logout()
+    {
+        Auth::logout();
+        return redirect()->route('home');
     }
 }

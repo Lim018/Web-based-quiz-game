@@ -13,18 +13,11 @@ return new class extends Migration
     {
         Schema::create('participants', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('quiz_game_id')->constrained()->onDelete('cascade');
-            $table->string('name');
-            $table->string('session_id');
+            $table->foreignId('quiz_id')->constrained()->onDelete('cascade');
+            $table->string('nickname');
             $table->integer('total_score')->default(0);
-            $table->integer('stage_1_score')->default(0);
-            $table->integer('stage_2_score')->default(0);
-            $table->integer('stage_3_score')->default(0);
-            $table->boolean('is_finished')->default(false);
+            $table->timestamp('finished_at')->nullable();
             $table->timestamps();
-
-            $table->index(['quiz_game_id', 'total_score']);
-            $table->unique(['quiz_game_id', 'session_id']);
         });
     }
 

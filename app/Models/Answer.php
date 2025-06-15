@@ -4,33 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ParticipantAnswer extends Model
+class Answer extends Model
 {
-    use HasFactory;
+   use HasFactory;
 
     protected $fillable = [
         'participant_id',
         'question_id',
         'answer',
         'is_correct',
-        'points_earned',
-        'answered_at'
+        'points_earned'
     ];
 
     protected $casts = [
         'is_correct' => 'boolean',
-        'points_earned' => 'integer',
-        'answered_at' => 'datetime'
     ];
 
-    public function participant(): BelongsTo
+    public function participant()
     {
         return $this->belongsTo(Participant::class);
     }
 
-    public function question(): BelongsTo
+    public function question()
     {
         return $this->belongsTo(Question::class);
     }

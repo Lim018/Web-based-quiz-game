@@ -11,21 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('questions', function (Blueprint $table) {
+        Schema::create('questions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('quiz_id')->constrained()->onDelete('cascade');
-            $table->tinyInteger('stage'); // 1=MCQ, 2=Short Answer, 3=True/False
-            $table->tinyInteger('question_number');
+            $table->integer('stage'); // 1, 2, or 3
+            $table->enum('type', ['multiple_choice', 'short_answer', 'true_false']);
             $table->text('question');
-            $table->enum('type', ['mcq', 'short_answer', 'true_false']);
-            $table->json('options')->nullable(); // For MCQ options
-            $table->string('correct_answer');
-            $table->text('explanation')->nullable();
+            $table->json('options')->nullable(); // For multiple choice
+            $table->text('correct_answer');
             $table->integer('points')->default(10);
-            $table->integer('time_limit')->nullable(); // Override quiz default if needed
             $table->timestamps();
-
-            $table->index(['quiz_id', 'stage', 'question_number']);
         });
     }
 

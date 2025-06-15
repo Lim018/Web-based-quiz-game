@@ -11,18 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('participant_answers', function (Blueprint $table) {
+        Schema::create('answers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('participant_id')->constrained()->onDelete('cascade');
             $table->foreignId('question_id')->constrained()->onDelete('cascade');
-            $table->string('answer');
+            $table->text('answer');
             $table->boolean('is_correct')->default(false);
             $table->integer('points_earned')->default(0);
-            $table->timestamp('answered_at');
             $table->timestamps();
-
-            $table->unique(['participant_id', 'question_id']);
-            $table->index(['question_id', 'is_correct']);
         });
     }
 
@@ -31,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('participant_answers');
+        Schema::dropIfExists('answers');
     }
 };
