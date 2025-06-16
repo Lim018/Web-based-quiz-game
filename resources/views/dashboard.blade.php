@@ -18,7 +18,7 @@
     @endphp
 
 
-    <div class="min-h-screen">
+    <div class="min-h-screen px-6 md:px-12 lg:px-0">
         <div class="container mx-auto py-12">
 
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8" data-aos="fade-down">

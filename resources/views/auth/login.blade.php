@@ -51,11 +51,11 @@
 
             <div class="relative flex py-4 items-center">
                 <div class="flex-grow border-t border-gray-200"></div>
-                <span class="flex-shrink mx-4 text-sm text-gray-400">Atau login dengan</span>
+                <span class="flex-shrink mx-4 text-sm text-gray-400">Atau</span>
                 <div class="flex-grow border-t border-gray-200"></div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {{-- <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <a href="#"
                     class="w-full flex items-center justify-center py-3 px-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all duration-200">
                     <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="h-6 w-6 mr-3">
@@ -66,7 +66,7 @@
                     <img src="https://www.svgrepo.com/show/448224/facebook.svg" alt="Facebook" class="h-6 w-6 mr-3">
                     <span class="font-semibold text-gray-700">Facebook</span>
                 </a>
-            </div>
+            </div> --}}
 
             <p class="text-center mt-6 text-sm">
                 Belum punya akun?
