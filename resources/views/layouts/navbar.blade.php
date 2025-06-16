@@ -3,7 +3,7 @@
         <div class="flex items-center justify-between">
             <!-- Logo -->
             <div>
-                <a href="{{ route('home') }}" class="text-2xl font-bold text-gray-800">QuizMaster</a>
+                <a href="{{ route('home') }}" class="text-2xl font-bold text-gray-800">EduRads</a>
             </div>
 
             <!-- Desktop Navigation -->
