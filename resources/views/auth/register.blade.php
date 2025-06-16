@@ -14,7 +14,7 @@
                     Buat Akun Baru
                 </h1>
                 <p class="mt-2 text-md text-gray-600">
-                    Bergabunglah dengan <span class="font-bold text-blue-600">QuizMaster</span> hari ini!
+                    Bergabunglah dengan <span class="font-bold text-blue-600">EduRads</span> hari ini!
                 </p>
             </div>
 
