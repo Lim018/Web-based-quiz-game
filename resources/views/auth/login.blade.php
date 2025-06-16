@@ -6,12 +6,12 @@
         <div class="max-w-lg w-full space-y-8 bg-white p-10 rounded-md shadow-md" data-aos="fade-up">
 
             <div class="text-center">
-                <i class="fas fa-graduation-cap text-5xl text-blue-600 mb-4"></i>
+                <img src="{{ asset('logo_edurads.png') }}" alt="ogo-edurads" class="mx-auto h-64 mb-4">
                 <h1 class="text-3xl font-extrabold text-gray-900">
                     Selamat Datang Kembali!
                 </h1>
                 <p class="mt-2 text-md text-gray-600">
-                    Login untuk melanjutkan ke <span class="font-bold text-blue-600">QuizMaster</span>
+                    Login untuk melanjutkan ke <span class="font-bold text-blue-600">EduRads</span>
                 </p>
             </div>
 

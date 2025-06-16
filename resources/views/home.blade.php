@@ -7,7 +7,7 @@
             <div class="lg:grid lg:grid-cols-2 lg:gap-24 items-center">
                 <div class="mb-16 lg:mb-0" data-aos="fade-right">
                     <h1 class="text-5xl lg:text-7xl font-black text-gray-900 leading-tight mb-6">
-                        Selamat Datang di <span class="text-accent">QuizMaster</span>
+                        Selamat Datang di <span class="text-accent">EduRads</span>
                     </h1>
                     <p class="text-xl text-gray-600 mb-8 leading-relaxed">
                         Uji pengetahuanmu dengan cara yang seru dan interaktif! Bergabung dengan teman-teman atau tantang
@@ -64,7 +64,7 @@
     <section id="features" class="py-20 overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16" data-aos="fade-up" data-aos-duration="800">
-                <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">Mengapa Memilih QuizMaster?</h2>
+                <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">Mengapa Memilih EduRads?</h2>
                 <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
                     Platform kuis modern dengan fitur-fitur unggulan untuk pengalaman belajar yang menyenangkan
                 </p>
@@ -100,7 +100,7 @@
                     </div>
                     <h4 class="text-xl font-bold text-gray-900 mb-4">Mobile Friendly</h4>
                     <p class="text-gray-600 leading-relaxed">
-                        Akses QuizMaster dimana saja dan kapan saja melalui perangkat mobile dengan tampilan yang responsif.
+                        Akses EduRads dimana saja dan kapan saja melalui perangkat mobile dengan tampilan yang responsif.
                     </p>
                 </div>
             </div>
@@ -149,7 +149,7 @@
     </style>
 
     {{-- <div class="text-center mb-12">
-    <h1 class="text-4xl font-bold mb-2">Selamat Datang di QuizMaster</h1>
+    <h1 class="text-4xl font-bold mb-2">Selamat Datang di EduRads</h1>
     <p class="text-lg text-gray-600">Uji pengetahuanmu dengan cara yang seru dan interaktif!</p>
 </div>
 
