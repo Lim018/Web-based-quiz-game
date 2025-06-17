@@ -315,7 +315,7 @@
                 </p>
             </div>
 
-            <div class="grid md:grid-cols-3 gap-8 mb-16">
+            <div class="grid md:grid-cols-2 gap-8 mb-16">
                 <!-- Feature 1 -->
                 <div class="group relative bg-white/80 backdrop-blur-sm p-8 rounded-3xl border border-gray-200 hover:border-emerald-300 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-emerald-500/10"
                     data-aos="fade-up" data-aos-delay="200">
@@ -336,31 +336,6 @@
                             <div class="flex items-center text-sm text-emerald-600 font-medium">
                                 <i class="fas fa-check-circle mr-2"></i>
                                 Sinkronisasi Instan
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Feature 2 -->
-                <div class="group relative bg-white/80 backdrop-blur-sm p-8 rounded-3xl border border-gray-200 hover:border-blue-300 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10"
-                    data-aos="fade-up" data-aos-delay="350">
-                    <div
-                        class="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    </div>
-                    <div class="relative z-10">
-                        <div
-                            class="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                            <i class="fas fa-chart-line text-white text-3xl"></i>
-                        </div>
-                        <h4 class="text-2xl font-bold text-gray-900 mb-4 text-center">AI-Powered Analytics</h4>
-                        <p class="text-gray-600 leading-relaxed text-center mb-6">
-                            Pantau perkembangan belajarmu dengan analisis AI yang mendalam. Dapatkan insight personal dan
-                            rekomendasi pembelajaran yang tepat.
-                        </p>
-                        <div class="flex justify-center">
-                            <div class="flex items-center text-sm text-blue-600 font-medium">
-                                <i class="fas fa-brain mr-2"></i>
-                                Smart Insights
                             </div>
                         </div>
                     </div>
@@ -451,17 +426,7 @@
                         </span>
                     </button>
 
-                    <div class="flex items-center text-white/80">
-                        <div class="flex -space-x-2 mr-4">
-                            <div class="w-10 h-10 bg-white/20 rounded-full border-2 border-white/30"></div>
-                            <div class="w-10 h-10 bg-white/20 rounded-full border-2 border-white/30"></div>
-                            <div class="w-10 h-10 bg-white/20 rounded-full border-2 border-white/30"></div>
-                        </div>
-                        <div class="text-left">
-                            <div class="font-bold">10,000+</div>
-                            <div class="text-sm">Pengguna Aktif</div>
-                        </div>
-                    </div>
+                        
                 </div>
             </div>
         </div>
